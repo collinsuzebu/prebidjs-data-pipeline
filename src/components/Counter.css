@@ -1,0 +1,11 @@
+.center-content {
+  align-items: center;
+}
+
+.bold-text {
+  background-color: khaki;
+  font-size: 5rem;
+  font-weight: bolder;
+  padding: 10px;
+  border-radius: 10%;
+}

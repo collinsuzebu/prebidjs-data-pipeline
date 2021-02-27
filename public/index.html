@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>React App</title>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.PNG" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Header Bidder Tags -->
+    <script async src="//www.googletagservices.com/tag/js/gpt.js"></script>
+    <script async src="//acdn.adnxs.com/prebid/not-for-prod/prebid.js"></script>
+    <!-- <script async src="../../build/dev/prebid.js"></script> -->
+
+    <!-- Header Bidder Script -->
+    <script>
+      var PREBID_TIMEOUT = 1000;
+      var FAILSAFE_TIMEOUT = 3000;
+
+      var div_1_sizes = [
+        [300, 250],
+        [300, 600],
+      ];
+      var div_2_sizes = [
+        [728, 90],
+        [970, 250],
+      ];
+
+      var adUnits = [
+        {
+          code: "/19968336/header-bid-tag-0",
+          mediaTypes: {
+            banner: {
+              sizes: div_1_sizes,
+            },
+          },
+          bids: [
+            {
+              bidder: "appnexus",
+              params: {
+                placementId: 13144370,
+              },
+            },
+          ],
+        },
+        {
+          code: "/19968336/header-bid-tag-1",
+          mediaTypes: {
+            banner: {
+              sizes: div_2_sizes,
+            },
+          },
+          bids: [
+            {
+              bidder: "appnexus",
+              params: {
+                placementId: 13144370,
+              },
+            },
+          ],
+        },
+      ];
+
+      var googletag = googletag || {};
+      googletag.cmd = googletag.cmd || [];
+      googletag.cmd.push(function () {
+        googletag.pubads().disableInitialLoad();
+      });
+
+      var pbjs = pbjs || {};
+      pbjs.que = pbjs.que || [];
+
+      pbjs.que.push(function () {
+        pbjs.addAdUnits(adUnits);
+
+        pbjs.requestBids({
+          bidsBackHandler: initAdserver,
+          timeout: PREBID_TIMEOUT,
+        });
+      });
+
+      function initAdserver() {
+        if (pbjs.initAdserverSet) return;
+
+        pbjs.initAdserverSet = true;
+
+        googletag.cmd.push(function () {
+          pbjs.que.push(function () {
+            pbjs.setTargetingForGPTAsync();
+            googletag.pubads().refresh();
+          });
+        });
+      }
+      // in case PBJS doesn't load
+      setTimeout(function () {
+        initAdserver();
+      }, FAILSAFE_TIMEOUT);
+
+      googletag.cmd.push(function () {
+        googletag
+          .defineSlot("/19968336/header-bid-tag-0", div_1_sizes, "div-1")
+          .addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+      });
+      googletag.cmd.push(function () {
+        googletag
+          .defineSlot("/19968336/header-bid-tag-1", div_2_sizes, "div-2")
+          .addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+      });
+    </script>
+    <script>
+      // Winning bids are not readily available, as auctionEnd event is triggered before
+      // winning bids are rendered.
+      setTimeout(() => {
+        const WINNING_BIDS = pbjs.getAllWinningBids();
+        const ALL_RESPONSES = pbjs.getBidResponses();
+
+        handleEventQueue(WINNING_BIDS, ALL_RESPONSES);
+      }, 3600);
+
+      // Set global Variables
+      const BATCH_QUEUE = [];
+      const SAMPLE_RATE = 0.2; // sample at the rate of 20%
+      const MQ_SERVER_URL = "https://unknown/clienId";
+      const evt = new Event("AuctionCaptured"); // trigger evt when new auction is captured
+
+      function handleEventQueue(winningBids, bidResponses) {
+        if (!sampleThisPage()) {
+          return;
+        }
+
+        Object.keys(bidResponses).forEach(function (adUnitCode) {
+          let response = bidResponses[adUnitCode];
+          response.bids.forEach(function (bid) {
+            let formatted = prettyFormat(bid, winningBids);
+
+            BATCH_QUEUE.push(formatted);
+            window.dispatchEvent(evt);
+          });
+        });
+
+        // sendToMessageQueue(BATCH_QUEUE);
+      }
+
+      function prettyFormat(bid, winners) {
+        return {
+          adId: bid.adId,
+          auctionId: bid.auctionId,
+          advertiserId: bid.meta.advertiserId,
+          bidder: bid.bidder,
+          cpm: bid.cpm,
+          currency: bid.currency,
+          height: bid.height,
+          mediaType: bid.mediaType,
+          netRevenue: bid.netRevenue,
+          pbAg: bid.pbAg,
+          pbCg: bid.pbCg,
+          pbDg: bid.pbDg,
+          pbHg: bid.pbHg,
+          pbLg: bid.pbLg,
+          pbMg: bid.pbMg,
+          requestTimestamp: bid.requestTimestamp,
+          responseTimestamp: bid.responseTimestamp,
+          width: bid.width,
+          statusMessage: bid.statusMessage,
+          timeToRespond: bid.timeToRespond,
+          url: window.location.href,
+          rendered: !!winners.find(function (winner) {
+            return winner.adId == bid.adId;
+          }),
+        };
+      }
+
+      function sampleThisPage(sample_rate = SAMPLE_RATE) {
+        return Math.random() <= sample_rate;
+      }
+
+      function sendToMessageQueue(data) {
+        fetch(MQ_SERVER_URL, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+      }
+
+      function setWinningBidsID(bids) {
+        bids.forEach((element) => {
+          WINNERS_ID[element.adUnitCode] = element.adId;
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- <h2>Basic Prebid.js Example</h2>
+    <h5>Div-1</h5>
+    <div id="div-1">
+      <script type="text/javascript">
+        googletag.cmd.push(function () {
+          googletag.display("div-1");
+        });
+      </script>
+    </div> -->
+    <div id="root"></div>
+  </body>
+</html>
