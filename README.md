@@ -1,5 +1,7 @@
 # Prebid.JS Analytic Data.
 
+![alt text]()
+
 ## Diagram Label:
 
 - **A.** User visits publishers website.
