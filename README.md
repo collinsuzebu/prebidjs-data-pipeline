@@ -1,6 +1,6 @@
 # Prebid.JS Analytic Data.
 
-![alt text]()
+![SAD](imgs/SAD-client-side.png "System Architecture Diagram")
 
 ## Diagram Label:
 
